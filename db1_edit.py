@@ -31,7 +31,13 @@ class my_col:
     def __init__(self, column):
         if type(self) == type(pd.Series()):
             self.ls = column.tolist()
-    
+    def stripper(self):
+        try:
+            for i in self.ls: float(i)
+        except:
+            n_ls = [i.strip() for i in self.ls]
+            return n_ls
+
 
 #create df
 raw_df = pd.read_excel(path)
