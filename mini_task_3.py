@@ -54,9 +54,7 @@ from sklearn.model_selection import cross_validate
 from catboost import CatBoostRegressor 
 
 #path to db
-path = '/home/nikolai/Downloads/task 3.csv'
+path = input("Введите путь: ")
 #data
 raw_df = pd.read_csv(path, delimiter = ',')
-
-#rhbyut
-
+print(raw_df)
