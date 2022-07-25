@@ -44,7 +44,6 @@ Ccat - концентрация наночастиц (mkg/ml), при котор
 """
 
 
-from heapq import nlargest
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -79,7 +78,7 @@ def indexer(column, name_of_col = 'feature'):
             print('this is not pandas series')
             print(type(column))
 
-#it doesnot work! fix!
+#this does not work! fix!
 def minmax(column):
     try:
         for i in column.tolist(): float(i)
