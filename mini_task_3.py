@@ -50,13 +50,39 @@ import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor as forestreg
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
 from catboost import CatBoostRegressor 
 
+#Yura, a question to you: do you know how to find a particular file on the computer? To make the code universial 
 #path to db
 path = '/home/nikolai/Downloads/task 3.csv'
 #data
-raw_df = pd.read_csv(path, delimiter = ',')
+raw_data = pd.read_csv(path, delimiter = ',')
+column_ls = raw_data.columns
 
-#rhbyut
+#turn categorial features into numbers
+def indexer(column, name_of_col = 'feature'):
+    try: 
+        for i in column.tolist(): float(i)
+        return column
+    except:
+        if type(column) == type(pd.Series()):
+            col_dc = {}
+            uniq_ls = column.unique()
+            for k in range(len(uniq_ls)): col_dc[uniq_ls[k]] = k
+            raw_col_list = column.tolist()
+            col_list = [i.replace(' ', '') for i in raw_col_list]
+            for key, value in col_dc.items(): 
+                for k in range(len(col_list)): col_list[k] = value if col_list[k]  == key else col_list[k]
+            col_ser = pd.Series(col_list, name= f'{name_of_col}_id')
+            return col_ser
+        else:
+            print('this is not pandas series')
+            print(type(column))
+data = pd.DataFrame()
 
+    
+
+for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
+print(data.head(20))
