@@ -56,9 +56,10 @@ from catboost import CatBoostRegressor
 
 #Yura, a question to you: do you know how to find a particular file on the computer? To make the code universial 
 #path to db
-path = input("Введите путь: ")
+
+path = "/home/nikolai/Downloads/task 3.csv"
+#path = input("Введите путь: ")
 #data
-<<<<<<< HEAD
 raw_data = pd.read_csv(path, delimiter = ',')
 column_ls = raw_data.columns
 
@@ -82,12 +83,9 @@ def indexer(column, name_of_col = 'feature'):
             print('this is not pandas series')
             print(type(column))
 data = pd.DataFrame()
-
-    
-
+#caregorial into indexes
 for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
 print(data.head(20))
-=======
-raw_df = pd.read_csv(path, delimiter = ',')
-print(raw_df)
->>>>>>> 9d7cc81464ff2a0b42420531eb4f0008e4316224
+
+
+
