@@ -44,9 +44,9 @@ Ccat - концентрация наночастиц (mkg/ml), при котор
 """
 
 
+from heapq import nlargest
 import pandas as pd
 import numpy as np
-import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor as forestreg
@@ -54,13 +54,9 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from catboost import CatBoostRegressor 
 
-#Yura, a question to you: do you know how to find a particular file on the computer? To make the code universial 
-#path to db
+url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
 
-path = "/home/nikolai/Downloads/task 3.csv"
-#path = input("Введите путь: ")
-#data
-raw_data = pd.read_csv(path, delimiter = ',')
+raw_data = pd.read_csv(url, delimiter = ',')
 column_ls = raw_data.columns
 
 #turn categorial features into numbers
@@ -83,39 +79,30 @@ def indexer(column, name_of_col = 'feature'):
             print('this is not pandas series')
             print(type(column))
 
-#separate letters from numbers in the string
-def check_type(word):
-    global num_dc, let_dc
-    num_dc, let_dc = {}, {}
-    j = 0
-    s = 0
-    num = ''
-    for i in word:
-        try:
-            int(i)
-            num = i if num == '' else num + i
-            try:
-                int(word[j+1])
-            except:
-                num_dc[j] = num
-                num = ''
-        except:
-            let_dc[j] = i
-        j+=1
+#it doesnot work! fix!
+def minmax(column):
+    try:
+        for i in column.tolist(): float(i)
+        col = (column - column.min())/(column.max() - column.min())
+        return col
+    except:
+        print('cannot normalize it (string)')
+        pass
 
-#function that turns stechoimetric formula into the sequence of letters
-def rep_formula(cell):
-    check_type(cell)
-    num_ls = [int(k) for k in num_dc.values()]
-    str_ls = [s for s in let_dc.values()]
-    str_out = ''
-    for i in range(len(num_ls)): str_out = str_ls[i] * num_ls[i] if str_out == '' else str_out + str_ls[i] * num_ls[i]
-    return str_out
+def num_check(column):
+    try:
+        for i in column.tolist(): float(i)
+        return True
+    except:
+        return False
 
 data = pd.DataFrame()
+
 #caregorial into indexes
 for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
-# print(data.head(20)
+numeric_ls = [i for i in column_ls if num_check(raw_data[i])]
 
+#for i in numeric_ls: data[i] = minmax(data[i])
 
+print(data.head(20))
 
