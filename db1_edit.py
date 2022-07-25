@@ -3,7 +3,9 @@ import numpy as np
 import os
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+from sklearn.impute import KNNImputer
+from sklearn.ensemble import RandomForestRegressor as forestreg
+from sklearn.model_selection import cross_validate
 #get the path pf the db1
 name = 'Database_1.xlsx'
 path = os.path.realpath(name)
@@ -27,6 +29,10 @@ def indexer(column, name_of_col = 'smth'):
             print('this is not pandas series')
             print(type(column))
 
+
+knn = KNNImputer(n_neighbors = 5, weights = 'distance')
+
+#class for column processing 
 class my_col:
     def __init__(self, column):
         if type(self) == type(pd.Series()):
@@ -34,9 +40,23 @@ class my_col:
     def stripper(self):
         try:
             for i in self.ls: float(i)
+            pass
         except:
             n_ls = [i.strip() for i in self.ls]
             return n_ls
+    def decoding(self):
+        try:
+            for i in self.ls: float(i)
+            pass
+        except:
+            n_ls = [i.replace('\xad', '-') for i in self.ls]
+            n_ls = (i.replace('\xa0', '') for i in n_ls)
+            return n_ls
+    def nan_proc(self):
+        if self.isnull().any():
+            return self.fillna(knn.fit_transform(self))
+
+
 
 
 #create df
