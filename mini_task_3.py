@@ -82,10 +82,40 @@ def indexer(column, name_of_col = 'feature'):
         else:
             print('this is not pandas series')
             print(type(column))
+
+#separate letters from numbers in the string
+def check_type(word):
+    global num_dc, let_dc
+    num_dc, let_dc = {}, {}
+    j = 0
+    s = 0
+    num = ''
+    for i in word:
+        try:
+            int(i)
+            num = i if num == '' else num + i
+            try:
+                int(word[j+1])
+            except:
+                num_dc[j] = num
+                num = ''
+        except:
+            let_dc[j] = i
+        j+=1
+
+#function that turns stechoimetric formula into the sequence of letters
+def rep_formula(cell):
+    check_type(cell)
+    num_ls = [int(k) for k in num_dc.values()]
+    str_ls = [s for s in let_dc.values()]
+    str_out = ''
+    for i in range(len(num_ls)): str_out = str_ls[i] * num_ls[i] if str_out == '' else str_out + str_ls[i] * num_ls[i]
+    return str_out
+
 data = pd.DataFrame()
 #caregorial into indexes
 for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
-print(data.head(20))
+# print(data.head(20)
 
 
 
