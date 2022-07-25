@@ -29,14 +29,15 @@ def indexer(column, name_of_col = 'smth'):
             print('this is not pandas series')
             print(type(column))
 
-
+#for missed values
 knn = KNNImputer(n_neighbors = 5, weights = 'distance')
 
-#class for column processing 
+#class for column proccesing 
 class my_col:
     def __init__(self, column):
         if type(self) == type(pd.Series()):
             self.ls = column.tolist()
+    #remove spaces in the begging and in the end of the cell
     def stripper(self):
         try:
             for i in self.ls: float(i)
@@ -44,6 +45,7 @@ class my_col:
         except:
             n_ls = [i.strip() for i in self.ls]
             return n_ls
+    #replace \xad & \xa0 with - and nothing
     def decoding(self):
         try:
             for i in self.ls: float(i)
@@ -52,6 +54,7 @@ class my_col:
             n_ls = [i.replace('\xad', '-') for i in self.ls]
             n_ls = (i.replace('\xa0', '') for i in n_ls)
             return n_ls
+    #missed values processing 
     def nan_proc(self):
         if self.isnull().any():
             return self.fillna(knn.fit_transform(self))
