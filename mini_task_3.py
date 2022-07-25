@@ -58,4 +58,5 @@ path = '/home/nikolai/Downloads/task 3.csv'
 #data
 raw_df = pd.read_csv(path, delimiter = ',')
 
+#rhbyut
 
