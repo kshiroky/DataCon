@@ -52,56 +52,64 @@ from sklearn.ensemble import RandomForestRegressor as forestreg
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from catboost import CatBoostRegressor 
+from sklearn.preprocessing import MinMaxScaler
 
 url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
 
 raw_data = pd.read_csv(url, delimiter = ',')
 column_ls = raw_data.columns
 
-#turn categorial features into numbers
-def indexer(column, name_of_col = 'feature'):
-    try: 
-        for i in column.tolist(): float(i)
-        return column
-    except:
-        if type(column) == type(pd.Series()):
-            col_dc = {}
-            uniq_ls = column.unique()
-            for k in range(len(uniq_ls)): col_dc[uniq_ls[k]] = k
-            raw_col_list = column.tolist()
-            col_list = [i.replace(' ', '') for i in raw_col_list]
-            for key, value in col_dc.items(): 
-                for k in range(len(col_list)): col_list[k] = value if col_list[k]  == key else col_list[k]
-            col_ser = pd.Series(col_list, name= f'{name_of_col}_id')
-            return col_ser
-        else:
-            print('this is not pandas series')
-            print(type(column))
+# удалила пробелы в Kcat и перенеса во float
+raw_data['Kcat'] = raw_data.Kcat.str.replace(' ','').astype(float)
+# raw_data.dtypes
+# raw_data.head(10)
 
-#this does not work! fix!
-def minmax(column):
-    try:
-        for i in column.tolist(): float(i)
-        col = (column - column.min())/(column.max() - column.min())
-        return col
-    except:
-        print('cannot normalize it (string)')
-        return column
+# корреляционная матрица
+cols_to_analyse= list(set(column_ls) - set(['formula', 'Subtype']))
+data_corr=raw_data[cols_to_analyse].corr()
 
-def num_check(column):
-    try:
-        for i in column.tolist(): float(i)
-        return True
-    except:
-        return False
+plt.figure(figsize = (10,6))
+sns.heatmap(data_corr)
+plt.show()
 
-data = pd.DataFrame()
+# увидела что width depth коррелируют и отобразила на графиках. Наверное width можно убрать
+coreletion_w_and_d = list(set(['width', 'depth']))
+sns.pairplot(raw_data[coreletion_w_and_d], size=3)
+plt.show()
+
+# отобразила статистику по колонкам
+print(raw_data.describe())
+
+# убрать ненужные стобцы
+exemplary_df = raw_data.drop(['depth'], axis=1)
+
+# замена категориальных свойств на численные
+exemplary_df['formula'] = exemplary_df['formula'].astype('category').cat.codes
+exemplary_df['Subtype'] = exemplary_df['Subtype'].astype('category').cat.codes
+
+# нашли выброс
+sns.boxplot(data=exemplary_df, orient="h")
+plt.show()
 
 
-#caregorial into indexes
-for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
-#normalization
-numeric_ls = [i for i in column_ls if num_check(raw_data[i])]
-for i in column_ls: data[i] = minmax(raw_data[i]) if num_check(raw_data[i]) else (minmax(data[i]) if i == 'Kcat' else data[i])
-print(data.head(20))
+# отстойная усатая коробка без выброса
+exemplary_df.drop(exemplary_df[exemplary_df['Kcat'] >= 70000.0].index, inplace = True)
+sns.boxplot(data=exemplary_df, orient="h")
+plt.show()
 
+
+# нормализация MinMax
+x = exemplary_df.values
+cols = exemplary_df.columns
+min_max_scaler = MinMaxScaler()
+x_scaled = min_max_scaler.fit_transform(x)
+norm_df = pd.DataFrame(x_scaled, columns=cols)
+print(norm_df)
+
+# репрезентация нормировки по желанию: 
+# for i in cols:
+#     print(i)
+#     plt.figure()
+#     plt.hist(df[i])
+#     plt.title(i)
+#     plt.show()
