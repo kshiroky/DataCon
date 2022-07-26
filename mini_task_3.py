@@ -40,14 +40,33 @@ Ccat - концентрация наночастиц (mkg/ml), при котор
 """
 
 
+
+pip install category-encoders
+pip install shap
+
+
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn import metrics
+
 from sklearn.ensemble import RandomForestRegressor as forestreg
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import MinMaxScaler 
+from catboost import CatBoostClassifier, Pool, cv
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from category_encoders import TargetEncoder
+import shap
+
+from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import train_test_split as splt
+
+from sklearn.model_selection import cross_val_predict
+
 
 url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
 
@@ -112,7 +131,6 @@ print(norm_df)
 
 
 #split data before model selection
-from sklearn.model_selection import train_test_split as splt
 km_X_train, km_X_test, km_y_train, km_y_test = splt(norm_df.drop(['Km','Kcat'], axis = 1), norm_df['Km'], shuffle = False, random_state = 50, test_size = 0.3)
 kcat_X_train, kcat_X_test, kcat_y_train, kcat_y_test = splt(norm_df.drop(['Km','Kcat'], axis = 1), norm_df['Kcat'], shuffle = False, random_state = 50, test_size = 0.3)
 x_data = norm_df.drop(['Km','Kcat'], axis = 1)
@@ -141,7 +159,6 @@ y_lin = x_lin
 plt.plot(x_lin, y_lin, 'r')
 plt.show()
 
-from sklearn.model_selection import cross_val_predict
 
 #cross-validation
 k_fold_forest = KFold(n_splits = 5)
@@ -187,61 +204,54 @@ sns.distplot(kcat_cv_for, bins = 5)
 plt.title('forest scores distribution for Kcat')
 plt.show()
 
+# CatBoostRegressor leanring
 
+# MODEL FOR KM WITH CATBOOST
 
-#catboost
-from catboost import CatBoostRegressor 
-km_cat = CatBoostRegressor(iterations = 100, random_seed = 50)
-km_trained_cat = km_cat.fit(km_X_train, km_y_train)
-
-#cv for catboost
-from catboost import Pool, cv
-params = {"iterations": 100,
-          "depth": 2,
-          "loss_function": "RMSE",
-          "verbose": False}
-
-km_cv_dataset = Pool(data= x_data, #change to a propriate one
-                  label= km_y_data) #also change
-km_scores = cv(km_cv_dataset,
-            params,
-            fold_count=5)
-km_cat_scores_plot = plt.figure(figsize= (10, 6))
-sns.displot(km_scores)
-plt.title('score of cat cross-val for Km')
-plt.show()
-
-    
-##features do not work! fix!
-#feature importance according to cat
-km_features = km_trained_cat.get_feature_importance(prettified = True)
-print(km_features)
-sns.displot(km_features)
-plt.show()
-
-kcat_cat = CatBoostRegressor(iterations = 100, random_seed = 50)
-kcat_trained_cat = kcat_cat.fit(kcat_X_train, kcat_y_train)
-#cv for catboost
-from catboost import Pool, cv
-params = {"iterations": 100,
-          "depth": 2,
-          "loss_function": "RMSE",
-          "verbose": False}
-
-kcat_cv_dataset = Pool(data= x_data, #change to a propriate one
-                  label= kcat_y_data) #also change
-kcat_scores = cv(kcat_cv_dataset,
-            params,
-            fold_count=5, 
-            plot="True")
-
-kcat_cat_scores_plot = plt.figure(figsize= (10, 6))
-sns.displot(kcat_scores)
-plt.title('score of cat cross-val for Kcat')
-plt.show()
+# CatBoostRegressor leanring
+cbr = CatBoostRegressor(iterations=100, learning_rate=1, depth=2)
+cbr.fit(km_X_train, km_y_train, plot=True)
+km_train = km_X_train.merge(km_y_train, right_index = True, left_index = True)
+categorical_features_indices = np.where(km_train.dtypes != np.float)[0]
 
 #feature importance according to cat
-kcat_features = kcat_trained_cat.get_feature_importance(prettified = True)
-print(kcat_features)
-sns.displot(kcat_features)
-plt.show()
+shap.initjs()
+explainer = shap.TreeExplainer(cbr)
+shap_values = explainer.shap_values(Pool(km_X_train, km_y_train, cat_features=categorical_features_indices))
+shap.force_plot(explainer.expected_value, shap_values[0,:], km_X_train.iloc[0,:], matplotlib=True, show=True)
+shap.summary_plot(shap_values, km_X_train, plot_type="bar")
+
+# prediction according to cat
+Km_y_pred_cbr = cbr.predict(km_X_test)
+
+plt.figure(figsize=(10,10))
+sns.regplot(km_y_test, Km_y_pred_cbr, fit_reg=True, scatter_kws={"s": 100})
+
+# getting RMSE and bias
+print(cbr.get_best_score())
+print(cbr.get_scale_and_bias())
+
+
+# MODEL FOR KCAT WITH CATBOOST
+# kcat_X_train, kcat_X_test, kcat_y_train, kcat_y_test = splt(norm_df.drop(['Km','Kcat'], axis = 1), norm_df['Kcat'], shuffle = False, random_state = 50, test_size = 0.3)
+# CatBoostRegressor leanring
+cbr.fit(kcat_X_train, kcat_y_train, plot=True)
+kcat_train = kcat_X_train.merge(kcat_y_train, right_index = True, left_index = True)
+categorical_features_indices = np.where(kcat_train.dtypes != np.float)[0]
+
+#feature importance according to cat
+shap.initjs()
+explainer = shap.TreeExplainer(cbr)
+shap_values = explainer.shap_values(Pool(kcat_X_train, kcat_y_train, cat_features=categorical_features_indices))
+shap.force_plot(explainer.expected_value, shap_values[0,:], kcat_X_train.iloc[0,:], matplotlib=True, show=True)
+shap.summary_plot(shap_values, kcat_X_train, plot_type="bar")
+
+# prediction according to cat
+Kcat_y_pred_cbr = cbr.predict(km_X_test)
+
+plt.figure(figsize=(10,10))
+sns.regplot(kcat_y_test, Kcat_y_pred_cbr, fit_reg=True, scatter_kws={"s": 100})
+
+# getting RMSE and bias
+print(cbr.get_best_score())
+print(cbr.get_scale_and_bias())
