@@ -51,12 +51,10 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor as forestreg
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
+
 from catboost import CatBoostRegressor 
-<<<<<<< HEAD
 from sklearn.preprocessing import MinMaxScaler
-=======
 from sklearn.preprocessing import MinMaxScaler 
->>>>>>> f6f7981a383718cc0311458f37adfb64b35f4e56
 
 url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
 
@@ -96,19 +94,17 @@ sns.boxplot(data=exemplary_df, orient="h")
 plt.show()
 
 
-<<<<<<< HEAD
+
 # отстойная усатая коробка без выброса
 exemplary_df.drop(exemplary_df[exemplary_df['Kcat'] >= 70000.0].index, inplace = True)
 sns.boxplot(data=exemplary_df, orient="h")
 plt.show()
-=======
+
 #caregorial into indexes
 for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
 #normalization
 
 print(data.head(20))
->>>>>>> f6f7981a383718cc0311458f37adfb64b35f4e56
-
 
 # нормализация MinMax
 x = exemplary_df.values
@@ -125,3 +121,32 @@ print(norm_df)
 #     plt.hist(df[i])
 #     plt.title(i)
 #     plt.show()
+
+#models parameters
+forest = forestreg(n_estimators = 20)
+
+#cross-validation
+
+
+#catboost
+from catboost import CatBoostRegressor 
+cat = CatBoostRegressor(plot = True)
+#cv for catboost
+from catboost import Pool, cv
+params = {"iterations": 100,
+          "depth": 2,
+          "nfolds":5,
+          "loss_function": "RMSE",
+          "verbose": False}
+
+# cv_dataset = Pool(data=X_train, #change to a propriate one
+#                   label=y_train) #also change
+# scores = cv(cv_dataset,
+#             params,
+#             fold_count=5, 
+#             plot="True")
+
+#feature importance according to cat
+# features = cat.get_feature_importance(prettified = True)
+# print(features)
+# sns.displot(features)
