@@ -86,7 +86,7 @@ def minmax(column):
         return col
     except:
         print('cannot normalize it (string)')
-        pass
+        return column
 
 def num_check(column):
     try:
@@ -97,11 +97,11 @@ def num_check(column):
 
 data = pd.DataFrame()
 
+
 #caregorial into indexes
 for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
+#normalization
 numeric_ls = [i for i in column_ls if num_check(raw_data[i])]
-
-#for i in numeric_ls: data[i] = minmax(data[i])
-
+for i in column_ls: data[i] = minmax(raw_data[i]) if num_check(raw_data[i]) else (minmax(data[i]) if i == 'Kcat' else data[i])
 print(data.head(20))
 
