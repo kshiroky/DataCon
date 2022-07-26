@@ -51,9 +51,6 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestRegressor as forestreg
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
-
-from catboost import CatBoostRegressor 
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import MinMaxScaler 
 
 url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
