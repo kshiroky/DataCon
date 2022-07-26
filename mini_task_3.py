@@ -52,7 +52,11 @@ from sklearn.ensemble import RandomForestRegressor as forestreg
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from catboost import CatBoostRegressor 
+<<<<<<< HEAD
 from sklearn.preprocessing import MinMaxScaler
+=======
+from sklearn.preprocessing import MinMaxScaler 
+>>>>>>> f6f7981a383718cc0311458f37adfb64b35f4e56
 
 url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
 
@@ -92,10 +96,18 @@ sns.boxplot(data=exemplary_df, orient="h")
 plt.show()
 
 
+<<<<<<< HEAD
 # отстойная усатая коробка без выброса
 exemplary_df.drop(exemplary_df[exemplary_df['Kcat'] >= 70000.0].index, inplace = True)
 sns.boxplot(data=exemplary_df, orient="h")
 plt.show()
+=======
+#caregorial into indexes
+for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
+#normalization
+
+print(data.head(20))
+>>>>>>> f6f7981a383718cc0311458f37adfb64b35f4e56
 
 
 # нормализация MinMax
