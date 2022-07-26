@@ -52,6 +52,7 @@ from sklearn.ensemble import RandomForestRegressor as forestreg
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from catboost import CatBoostRegressor 
+from sklearn.preprocessing import MinMaxScaler 
 
 url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
 
@@ -101,7 +102,6 @@ data = pd.DataFrame()
 #caregorial into indexes
 for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
 #normalization
-numeric_ls = [i for i in column_ls if num_check(raw_data[i])]
-for i in column_ls: data[i] = minmax(raw_data[i]) if num_check(raw_data[i]) else (minmax(data[i]) if i == 'Kcat' else data[i])
+
 print(data.head(20))
 
