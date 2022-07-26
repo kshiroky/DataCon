@@ -139,7 +139,7 @@ km_plot = plt.figure(figsize = (10,6))
 sns.scatterplot(np.log10(km_y_train), np.log10(km_forest.oob_prediction_))
 plt.xlabel('real')
 plt.ylabel('predict')
-plt.title('prediciton without cross-validation')
+plt.title('prediciton without cross-validation for Km')
 plt.show()
 
 from sklearn.model_selection import cross_val_predict
@@ -152,12 +152,12 @@ km_cv_plot = plt.figure(figsize = (10,6))
 sns.scatterplot(km_y_data, km_cv_pred)
 plt.xlabel('real')
 plt.ylabel('predict')
-plt.title('cross-validation prediction')
+plt.title('cross-validation prediction for Km')
 plt.show()
 
 score_plot = plt.figure(figsize = (10,6)) 
 sns.distplot(km_cv_for, bins = 5)
-plt.title('forest scores distribution')
+plt.title('forest scores distribution for Km')
 plt.show()
 
 
@@ -194,7 +194,7 @@ kcat_forest.fit(kcat_X_train, kcat_y_train)
 #visualize the results of training
 kcat_for_plt = plt.figure(figsize = (10,6))
 sns.scatterplot(np.log10(kcat_y_train), np.log10(kcat_forest.oob_prediction_))
-plt.title('no cross-val random forest')
+plt.title('no cross-val random forest for Kcat')
 plt.show()
 
 #cross-validation
@@ -206,12 +206,12 @@ kcat_cv_plot = plt.figure(figsize = (10,6))
 sns.scatterplot(kcat_y_data, kcat_cv_pred)
 plt.xlabel('real')
 plt.ylabel('predict')
-plt.title('cross-validation prediction')
+plt.title('cross-validation prediction for Kcat')
 plt.show()
 
 score_plot = plt.figure(figsize = (10,6)) 
 sns.distplot(kcat_cv_for, bins = 5)
-plt.title('forest scores distribution')
+plt.title('forest scores distribution for Kcat')
 plt.show()
 
 
