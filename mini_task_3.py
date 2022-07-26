@@ -71,7 +71,7 @@ plt.figure(figsize = (10,6))
 sns.heatmap(data_corr)
 plt.show()
 
-# увидела что width depth коррелируют и отобразила на графиках. Наверное width можно убрать
+# увидела что width depth коррелируют и отобразила на графиках. Наверное depth можно убрать
 coreletion_w_and_d = list(set(['width', 'depth']))
 sns.pairplot(raw_data[coreletion_w_and_d], size=3)
 plt.show()
@@ -97,11 +97,6 @@ exemplary_df.drop(exemplary_df[exemplary_df['Kcat'] >= 70000.0].index, inplace =
 sns.boxplot(data=exemplary_df, orient="h")
 plt.show()
 
-#caregorial into indexes
-for i in column_ls: data = pd.concat((data, pd.Series(indexer(raw_data[i], i), name = i)), axis = 1)
-#normalization
-
-print(data.head(20))
 
 # нормализация MinMax
 x = exemplary_df.values
@@ -119,10 +114,106 @@ print(norm_df)
 #     plt.title(i)
 #     plt.show()
 
-#models parameters
-forest = forestreg(n_estimators = 20)
+
+#split data before model selection
+from sklearn.model_selection import train_test_split as splt
+km_X_train, km_X_test, km_y_train, km_y_test = splt(norm_df.drop(['Km','Kcat'], axis = 1), norm_df['Km'], shuffle = False, random_state = 50, test_size = 0.3)
+kcat_X_train, kcat_X_test, kcat_y_train, kcat_y_test = splt(norm_df.drop(['Km','Kcat'], axis = 1), norm_df['Kcat'], shuffle = False, random_state = 50, test_size = 0.3)
+x_data = norm_df.drop(['Km','Kcat'], axis = 1)
+km_y_data = norm_df['Km']
+kcat_y_data = norm_df['Kcat']
+
+#evaluate the shape of splitted data
+print(km_X_train.shape, km_y_train.shape)
+print(km_X_test.shape, km_y_test.shape)
+print(kcat_X_train.shape, kcat_y_train.shape)
+print(kcat_X_test.shape, kcat_y_test.shape)
+print(x_data.shape, km_y_data.shape)
+print(x_data.shape, kcat_y_data.shape)
+
+#Km model parameters
+km_forest = forestreg(n_estimators = 100, random_state = 50, oob_score = True)
+km_forest.fit(km_X_train, km_y_train)
+#visualize the results of training
+km_plot = plt.figure(figsize = (10,6))
+sns.scatterplot(np.log10(km_y_train), np.log10(km_forest.oob_prediction_))
+plt.xlabel('real')
+plt.ylabel('predict')
+plt.title('prediciton without cross-validation')
+plt.show()
+
+from sklearn.model_selection import cross_val_predict
 
 #cross-validation
+k_fold_forest = KFold(n_splits = 5)
+km_cv_pred = cross_val_predict(km_forest, x_data, km_y_data, cv = k_fold_forest)
+km_cv_for = cross_val_score(km_forest, x_data, km_y_data, cv = k_fold_forest) #change X_train, y_train if needed
+km_cv_plot = plt.figure(figsize = (10,6))
+sns.scatterplot(km_y_data, km_cv_pred)
+plt.xlabel('real')
+plt.ylabel('predict')
+plt.title('cross-validation prediction')
+plt.show()
+
+score_plot = plt.figure(figsize = (10,6)) 
+sns.distplot(km_cv_for, bins = 5)
+plt.title('forest scores distribution')
+plt.show()
+
+
+
+#catboost
+from catboost import CatBoostRegressor 
+cat = CatBoostRegressor()
+#cv for catboost
+from catboost import Pool, cv
+params = {"iterations": 100,
+          "depth": 2,
+          "loss_function": "RMSE",
+          "verbose": False}
+
+km_cv_dataset = Pool(data= x_data, #change to a propriate one
+                  label= km_y_data) #also change
+km_scores = cv(km_cv_dataset,
+            params,
+            fold_count=5, 
+            plot="True")
+
+    
+##features do not work! fix!
+#feature importance according to cat
+km_features = cat.get_feature_importance(prettified = True)
+print(km_features)
+sns.displot(km_features)
+plt.show()
+
+#Kcat model parameters
+kcat_forest = forestreg(n_estimators = 100, random_state = 50, oob_score = True)
+kcat_forest.fit(kcat_X_train, kcat_y_train)
+
+#visualize the results of training
+kcat_for_plt = plt.figure(figsize = (10,6))
+sns.scatterplot(np.log10(kcat_y_train), np.log10(kcat_forest.oob_prediction_))
+plt.title('no cross-val random forest')
+plt.show()
+
+#cross-validation
+k_fold_forest = KFold(n_splits = 5)
+kcat_cv_for = cross_val_score(kcat_forest, x_data, kcat_y_data, cv = k_fold_forest) #change X_train, y_train if needed
+kcat_cv_pred = cross_val_predict(kcat_forest, x_data, kcat_y_data, cv = k_fold_forest)
+
+kcat_cv_plot = plt.figure(figsize = (10,6)) 
+sns.scatterplot(kcat_y_data, kcat_cv_pred)
+plt.xlabel('real')
+plt.ylabel('predict')
+plt.title('cross-validation prediction')
+plt.show()
+
+score_plot = plt.figure(figsize = (10,6)) 
+sns.distplot(kcat_cv_for, bins = 5)
+plt.title('forest scores distribution')
+plt.show()
+
 
 
 #catboost
@@ -132,18 +223,18 @@ cat = CatBoostRegressor(plot = True)
 from catboost import Pool, cv
 params = {"iterations": 100,
           "depth": 2,
-          "nfolds":5,
           "loss_function": "RMSE",
           "verbose": False}
 
-# cv_dataset = Pool(data=X_train, #change to a propriate one
-#                   label=y_train) #also change
-# scores = cv(cv_dataset,
-#             params,
-#             fold_count=5, 
-#             plot="True")
+kcat_cv_dataset = Pool(data= x_data, #change to a propriate one
+                  label= kcat_y_data) #also change
+kcat_scores = cv(kcat_cv_dataset,
+            params,
+            fold_count=5, 
+            plot="True")
 
 #feature importance according to cat
-# features = cat.get_feature_importance(prettified = True)
-# print(features)
-# sns.displot(features)
+kcat_features = cat.get_feature_importance(prettified = True)
+print(kcat_features)
+sns.displot(kcat_features)
+plt.show()
