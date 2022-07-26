@@ -140,6 +140,9 @@ sns.scatterplot(np.log10(km_y_train), np.log10(km_forest.oob_prediction_))
 plt.xlabel('real')
 plt.ylabel('predict')
 plt.title('prediciton without cross-validation for Km')
+x_lin = np.linspace(-7, 2, 100)
+y_lin = x_lin
+plt.plot(x_lin, y_lin, 'r')
 plt.show()
 
 from sklearn.model_selection import cross_val_predict
@@ -160,32 +163,6 @@ sns.distplot(km_cv_for, bins = 5)
 plt.title('forest scores distribution for Km')
 plt.show()
 
-
-
-#catboost
-from catboost import CatBoostRegressor 
-cat = CatBoostRegressor()
-#cv for catboost
-from catboost import Pool, cv
-params = {"iterations": 100,
-          "depth": 2,
-          "loss_function": "RMSE",
-          "verbose": False}
-
-km_cv_dataset = Pool(data= x_data, #change to a propriate one
-                  label= km_y_data) #also change
-km_scores = cv(km_cv_dataset,
-            params,
-            fold_count=5, 
-            plot="True")
-
-    
-##features do not work! fix!
-#feature importance according to cat
-km_features = cat.get_feature_importance(prettified = True)
-print(km_features)
-sns.displot(km_features)
-plt.show()
 
 #Kcat model parameters
 kcat_forest = forestreg(n_estimators = 100, random_state = 50, oob_score = True)
@@ -218,7 +195,36 @@ plt.show()
 
 #catboost
 from catboost import CatBoostRegressor 
-cat = CatBoostRegressor(plot = True)
+km_cat = CatBoostRegressor(iterations = 100, random_seed = 50)
+km_trained_cat = km_cat.fit(km_X_train, km_y_train)
+
+#cv for catboost
+from catboost import Pool, cv
+params = {"iterations": 100,
+          "depth": 2,
+          "loss_function": "RMSE",
+          "verbose": False}
+
+km_cv_dataset = Pool(data= x_data, #change to a propriate one
+                  label= km_y_data) #also change
+km_scores = cv(km_cv_dataset,
+            params,
+            fold_count=5)
+km_cat_scores_plot = plt.figure(figsize= (10, 6))
+sns.displot(km_scores)
+plt.title('score of cat cross-val for Km')
+plt.show()
+
+    
+##features do not work! fix!
+#feature importance according to cat
+km_features = km_trained_cat.get_feature_importance(prettified = True)
+print(km_features)
+sns.displot(km_features)
+plt.show()
+
+kcat_cat = CatBoostRegressor(iterations = 100, random_seed = 50)
+kcat_trained_cat = kcat_cat.fit(kcat_X_train, kcat_y_train)
 #cv for catboost
 from catboost import Pool, cv
 params = {"iterations": 100,
@@ -233,8 +239,14 @@ kcat_scores = cv(kcat_cv_dataset,
             fold_count=5, 
             plot="True")
 
+kcat_cat_scores_plot = plt.figure(figsize= (10, 6))
+sns.displot(kcat_scores)
+plt.title('score of cat cross-val for Kcat')
+plt.show()
+
 #feature importance according to cat
-kcat_features = cat.get_feature_importance(prettified = True)
+kcat_features = kcat_trained_cat.get_feature_importance(prettified = True)
 print(kcat_features)
 sns.displot(kcat_features)
 plt.show()
+
