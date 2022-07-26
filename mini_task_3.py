@@ -37,12 +37,19 @@ temp - температура, при которой измеряли катал
 Cper - концентрация H2O2 (mM), при которой измеряли каталитическую активность
 Csub - концентрация хромогенного субстрата (mM), при которой измеряли каталитическую активность
 Ccat - концентрация наночастиц (mkg/ml), при которой измеряли каталитическую активность
+
+
+
+P.S.
+Графики косые (шкалы надо бы переобозначить, но силы на сегодня иссякли, потом подправим)
+а так все работает, но криво
 """
+# !pip install traitlets
+# !pip install IPython
+# !pip install ipywidgets
+#!pip install catboost
+# !pip install category-encoders
 
-
-
-# pip install category-encoders
-# pip install shap
 
 
 import pandas as pd
@@ -96,6 +103,8 @@ def add_prop(df, prop='energy'):
 url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
 
 raw_data = pd.read_csv(url, delimiter = ',')
+# raw_data = add_prop(raw_data)
+# raw_data.energy = raw_data.energy.dropna()
 column_ls = raw_data.columns
 
 # удалила пробелы в Kcat и перенеса во float
@@ -106,14 +115,15 @@ raw_data['Kcat'] = raw_data.Kcat.str.replace(' ','').astype(float)
 # корреляционная матрица
 cols_to_analyse= list(set(column_ls) - set(['formula', 'Subtype']))
 data_corr=raw_data[cols_to_analyse].corr()
-plt.figure(figsize = (10,6))
+plt.figure(figsize = (7,7))
+plt.title('Корреляционная матрица')
 sns.heatmap(data_corr)
 plt.show()
 
 # увидела что width depth коррелируют и отобразила на графиках. Наверное depth можно убрать
 coreletion_w_and_d = list(set(['width', 'depth']))
 sns.pairplot(raw_data[coreletion_w_and_d], size=3)
-plt.show()
+plt.show() 
 
 # отобразила статистику по колонкам
 print(raw_data.describe())
@@ -126,14 +136,18 @@ exemplary_df['formula'] = exemplary_df['formula'].astype('category').cat.codes
 exemplary_df['Subtype'] = exemplary_df['Subtype'].astype('category').cat.codes
 
 # нашли выброс
+out_data_plot = plt.figure(figsize=(7,7))
 sns.boxplot(data=exemplary_df, orient="h")
+plt.title('box plot for parameters')
 plt.show()
 
 
 
 # отстойная усатая коробка без выброса
+out_data_plot2 = plt.figure(figsize=(7,7))
 exemplary_df.drop(exemplary_df[exemplary_df['Kcat'] >= 70000.0].index, inplace = True)
 sns.boxplot(data=exemplary_df, orient="h")
+plt.title('box plot for parameters')
 plt.show()
 
 
@@ -157,8 +171,8 @@ print(norm_df)
 
 #split data before model selection
 from sklearn.model_selection import train_test_split as splt
-km_X_train, km_X_test, km_y_train, km_y_test = splt(norm_df, exemplary_df['Km'], shuffle = False, random_state = 50, test_size = 0.3)
-kcat_X_train, kcat_X_test, kcat_y_train, kcat_y_test = splt(norm_df, exemplary_df['Kcat'], shuffle = False, random_state = 50, test_size = 0.3)
+km_X_train, km_X_test, km_y_train, km_y_test = splt(norm_df.drop('formula', axis = 1), exemplary_df['Km'], shuffle = False, test_size = 0.3)
+kcat_X_train, kcat_X_test, kcat_y_train, kcat_y_test = splt(norm_df.drop('formula', axis = 1), exemplary_df['Kcat'], shuffle = False, test_size = 0.3)
 x_data = norm_df
 km_y_data = exemplary_df['Km']
 kcat_y_data = exemplary_df['Kcat']
@@ -172,7 +186,7 @@ print(x_data.shape, km_y_data.shape)
 print(x_data.shape, kcat_y_data.shape)
 
 #Km model parameters
-km_forest = forestreg(n_estimators = 100, random_state = 50, oob_score = True)
+km_forest = forestreg(n_estimators = 100, oob_score = True)
 km_forest.fit(km_X_train, km_y_train)
 #feature importance
 features = km_forest.feature_names_in_
@@ -186,7 +200,7 @@ plt.xlabel('Relative Importance')
 plt.show()
 
 #visualize the results of training
-km_plot = plt.figure(figsize = (10,6))
+km_plot = plt.figure(figsize=(7,7))
 sns.scatterplot(np.log10(km_y_train), np.log10(km_forest.oob_prediction_))
 plt.xlabel('real')
 plt.ylabel('predict')
@@ -201,21 +215,21 @@ plt.show()
 k_fold_forest = KFold(n_splits = 5)
 km_cv_pred = cross_val_predict(km_forest, x_data, km_y_data, cv = k_fold_forest)
 km_cv_for = cross_val_score(km_forest, x_data, km_y_data, cv = k_fold_forest) #change X_train, y_train if needed
-km_cv_plot = plt.figure(figsize = (10,6))
-sns.scatterplot(km_y_data, km_cv_pred)
+km_cv_plot = plt.figure(figsize=(7,7))
+sns.scatterplot(np.log10(km_y_data), np.log10(km_cv_pred))
 plt.xlabel('real')
 plt.ylabel('predict')
 plt.title('cross-validation prediction for Km')
 plt.show()
 
-score_plot = plt.figure(figsize = (10,6)) 
+score_plot = plt.figure(figsize=(7,7)) 
 sns.distplot(km_cv_for, bins = 5)
 plt.title('forest scores distribution for Km')
 plt.show()
 
 
 #Kcat model parameters
-kcat_forest = forestreg(n_estimators = 100, random_state = 50, oob_score = True)
+kcat_forest = forestreg(n_estimators = 100, oob_score = True)
 kcat_forest.fit(kcat_X_train, kcat_y_train)
 #feature importance
 features = km_forest.feature_names_in_
@@ -229,7 +243,7 @@ plt.xlabel('Relative Importance')
 plt.show()
 
 #visualize the results of training
-kcat_for_plt = plt.figure(figsize = (10,6))
+kcat_for_plt = plt.figure(figsize = (10,10))
 sns.scatterplot(np.log10(kcat_y_train), np.log10(kcat_forest.oob_prediction_))
 x_lin = np.linspace(-7, 8, 100)
 y_lin = x_lin
@@ -242,14 +256,14 @@ k_fold_forest = KFold(n_splits = 5)
 kcat_cv_for = cross_val_score(kcat_forest, x_data, kcat_y_data, cv = k_fold_forest) #change X_train, y_train if needed
 kcat_cv_pred = cross_val_predict(kcat_forest, x_data, kcat_y_data, cv = k_fold_forest)
 
-kcat_cv_plot = plt.figure(figsize = (10,6)) 
-sns.scatterplot(kcat_y_data, kcat_cv_pred)
+kcat_cv_plot = plt.figure(figsize = (10,10)) 
+sns.scatterplot(np.log10(kcat_y_data), np.log10(kcat_cv_pred))
 plt.xlabel('real')
 plt.ylabel('predict')
 plt.title('cross-validation prediction for Kcat')
 plt.show()
 
-score_plot = plt.figure(figsize = (10,6)) 
+score_plot = plt.figure(figsize = (10,10)) 
 sns.distplot(kcat_cv_for, bins = 5)
 plt.title('forest scores distribution for Kcat')
 plt.show()
@@ -288,7 +302,7 @@ km_scores = cv(km_cv_dataset,
             params,
             fold_count=5)
 
-km_cat_scores_plot = plt.figure(figsize= (10, 6))
+km_cat_scores_plot = plt.figure(figsize=(7,7))
 sns.displot(km_scores)
 plt.title('score of cat cross-val for Km')
 plt.show()
@@ -306,8 +320,9 @@ categorical_features_indices = np.where(kcat_train.dtypes != np.float)[0]
 Kcat_y_pred_cbr = cbr.predict(km_X_test)
 
 plt.figure(figsize=(10,10))
+plt.title('cat prediction for Km')
 sns.regplot(kcat_y_test, Kcat_y_pred_cbr, fit_reg=True, scatter_kws={"s": 100})
-
+plt.show()
 # getting RMSE and bias
 print(cbr.get_best_score())
 print(cbr.get_scale_and_bias())
@@ -325,7 +340,7 @@ kcat_scores = cv(kcat_cv_dataset,
             params,
             fold_count=5)
 
-kcat_cat_scores_plot = plt.figure(figsize= (10, 6))
+kcat_cat_scores_plot = plt.figure(figsize= (10, 10))
 sns.displot(kcat_scores)
 plt.title('score of cat cross-val for Kcat')
 plt.show()
