@@ -37,19 +37,26 @@ temp - температура, при которой измеряли катал
 Cper - концентрация H2O2 (mM), при которой измеряли каталитическую активность
 Csub - концентрация хромогенного субстрата (mM), при которой измеряли каталитическую активность
 Ccat - концентрация наночастиц (mkg/ml), при которой измеряли каталитическую активность
-
-
-
-P.S.
-Графики косые (шкалы надо бы переобозначить, но силы на сегодня иссякли, потом подправим)
-а так все работает, но криво
 """
-# !pip install traitlets
-# !pip install IPython
-# !pip install ipywidgets
-#!pip install catboost
-# !pip install category-encoders
 
+#satisfying requirements
+from pip._internal import main 
+packages = ('traitlets', 
+            'IPython', 
+            'ipywidgets',
+            'catboost', 
+            'category-encoders',
+            'pandas', 
+            'numpy', 
+            'seaborn', 
+            'sklearn',
+            'matplotlib',
+            'pymatgen')
+for package in packages:
+    try:
+        __import__(package)
+    except ImportError:
+        main(['install', package.split()[0]])
 
 
 import pandas as pd
