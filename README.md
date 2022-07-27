@@ -6,7 +6,7 @@ pip install -r requirements.txt
 
 В создании принимали участие:
 
-djzhendog
+djzhendogg
 
 yuriiseregin1
 
