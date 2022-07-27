@@ -103,6 +103,7 @@ def add_prop(df, prop='energy'):
 url = 'https://raw.githubusercontent.com/kshiroky/DataCon/main/task%203.csv'
 
 raw_data = pd.read_csv(url, delimiter = ',')
+#add columns from pymatgen
 # raw_data = add_prop(raw_data)
 # raw_data.energy = raw_data.energy.dropna()
 column_ls = raw_data.columns
@@ -115,7 +116,7 @@ raw_data['Kcat'] = raw_data.Kcat.str.replace(' ','').astype(float)
 # корреляционная матрица
 cols_to_analyse= list(set(column_ls) - set(['formula', 'Subtype']))
 data_corr=raw_data[cols_to_analyse].corr()
-plt.figure(figsize = (7,7))
+plt.figure(figsize = (10,6))
 plt.title('Корреляционная матрица')
 sns.heatmap(data_corr)
 plt.show()
@@ -219,7 +220,12 @@ km_cv_plot = plt.figure(figsize=(7,7))
 sns.scatterplot(np.log10(km_y_data), np.log10(km_cv_pred))
 plt.xlabel('real')
 plt.ylabel('predict')
+plt.xticks([*range(-3,4)])
+plt.yticks([*range(-3,4)])
 plt.title('cross-validation prediction for Km')
+x_lin = np.linspace(-3, 4, 100)
+y_lin = x_lin
+plt.plot(x_lin, y_lin, 'r')
 plt.show()
 
 score_plot = plt.figure(figsize=(7,7)) 
@@ -261,6 +267,12 @@ sns.scatterplot(np.log10(kcat_y_data), np.log10(kcat_cv_pred))
 plt.xlabel('real')
 plt.ylabel('predict')
 plt.title('cross-validation prediction for Kcat')
+x_lin = np.linspace(-7, 8, 100)
+y_lin = x_lin
+plt.plot(x_lin, y_lin, 'r')
+plt.xticks([*range(-6,7)])
+plt.yticks([*range(-6,7)])
+
 plt.show()
 
 score_plot = plt.figure(figsize = (10,10)) 
