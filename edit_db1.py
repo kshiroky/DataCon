@@ -10,6 +10,7 @@ packages = ('xlsxwriter',
             'numpy',
             'seaborn',
             'sklearn',
+            'openpyxl',
             'matplotlib')
 for package in packages:
     try:
